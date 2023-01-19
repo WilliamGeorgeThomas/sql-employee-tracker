@@ -32,6 +32,13 @@ function viewEmployees() {
   });
 }
 
+function addDepartment() {
+  db.query("INSERT INTO department (name) VALUES ('')", function (err, results) {
+    console.table(results);
+    console.log("Department successfully added");
+  });
+}
+
 inquirer
   .prompt([
     {
@@ -42,6 +49,7 @@ inquirer
         { name: "View all departments", value: "VIEW DEPARTMENTS" },
         { name: "View all roles", value: "VIEW ROLES" },
         { name: "View all employees", value: "VIEW EMPLOYEES" },
+        { name: "Add a department", value: "ADD DEPARTMENT" },
       ],
     },
   ])
@@ -54,5 +62,8 @@ inquirer
     }
     if (response.choice === "VIEW EMPLOYEES") {
       viewEmployees();
+    }
+    if (response.choice === "ADD DEPARTMENT") {
+      addDepartment();
     }
   });
