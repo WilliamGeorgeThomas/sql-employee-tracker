@@ -1,6 +1,7 @@
 const inquirer = require("inquirer");
 const mysql = require("mysql2");
 const cTable = require("console.table");
+require("dotenv").config();
 
 const db = mysql.createConnection(
   {
@@ -8,7 +9,7 @@ const db = mysql.createConnection(
     // MySQL username,
     user: "root",
     // MySQL password
-    password: "root",
+    password: process.env.PW,
     database: "tracker",
   },
   console.log(`Connected to the tracker database.`)
@@ -33,37 +34,56 @@ function viewEmployees() {
 }
 
 function addDepartment() {
-  db.query("INSERT INTO department (name) VALUES ('')", function (err, results) {
-    console.table(results);
-    console.log("Department successfully added");
-  });
+  inquirer
+    .prompt([
+      {
+        message: "What is the department name?",
+        name: "name",
+      },
+    ])
+    .then((answer) => {
+      db.query("INSERT INTO department SET ?", answer, function (err, results) {
+        console.log("Department successfully added");
+      });
+    });
 }
 
-inquirer
-  .prompt([
-    {
-      type: "list",
-      message: "What would you like to do?",
-      name: "choice",
-      choices: [
-        { name: "View all departments", value: "VIEW DEPARTMENTS" },
-        { name: "View all roles", value: "VIEW ROLES" },
-        { name: "View all employees", value: "VIEW EMPLOYEES" },
-        { name: "Add a department", value: "ADD DEPARTMENT" },
-      ],
-    },
-  ])
-  .then((response) => {
-    if (response.choice === "VIEW DEPARTMENTS") {
-      viewDepartments();
-    }
-    if (response.choice === "VIEW ROLES") {
-      viewRoles();
-    }
-    if (response.choice === "VIEW EMPLOYEES") {
-      viewEmployees();
-    }
-    if (response.choice === "ADD DEPARTMENT") {
-      addDepartment();
-    }
-  });
+function anotherOne() {
+  inquirer
+    .prompt([
+      {
+        type: "list",
+        message: "What would you like to do?",
+        name: "choice",
+        choices: [
+          { name: "View all departments", value: "VIEW DEPARTMENTS" },
+          { name: "View all roles", value: "VIEW ROLES" },
+          { name: "View all employees", value: "VIEW EMPLOYEES" },
+          { name: "Add a department", value: "ADD DEPARTMENT" },
+          { name: "Exit?", value: "EXIT" },
+        ],
+      },
+    ])
+    .then((response) => {
+      if (response.choice === "VIEW DEPARTMENTS") {
+        viewDepartments();
+      }
+      if (response.choice === "VIEW ROLES") {
+        viewRoles();
+      }
+      if (response.choice === "VIEW EMPLOYEES") {
+        viewEmployees();
+      }
+      if (response.choice === "ADD DEPARTMENT") {
+        addDepartment();
+      }
+      if (response.choice === "EXIT") {
+        process.exit();
+      }
+      // else {
+      //   anotherOne();
+      // }
+    });
+}
+
+anotherOne();
