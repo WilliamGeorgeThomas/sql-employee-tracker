@@ -76,6 +76,50 @@ function addRole() {
   });
 }
 
+function employees() {
+  db.query("SELECT * FROM employee", function (err, results) {
+    const managers = results.map((manager) => ({ name: manager.first_name, value: manager.id }));
+    return managers;
+  });
+}
+
+function addEmployee() {
+  db.query("SELECT * FROM role", function (err, results) {
+    const roles = results.map((role) => ({ name: role.title, value: role.id }));
+    inquirer
+      .prompt([
+        {
+          message: "What is their first name?",
+          name: "first_name",
+        },
+        {
+          message: "What is their last name?",
+          name: "last_name",
+        },
+        {
+          type: "list",
+          message: "What is their role?",
+          name: "role_id",
+          choices: roles,
+        },
+        {
+          type: "input",
+          message: "Who is their manager?",
+          name: "manager_id",
+          // choices: [],
+        },
+      ])
+      .then((answer) => {
+        console.log(employees());
+        db.query("INSERT INTO employee SET ?", answer, function (err, results) {
+          console.log("Role successfully added");
+        });
+      });
+  });
+}
+
+function updateRole()
+
 function anotherOne() {
   inquirer
     .prompt([
@@ -89,6 +133,8 @@ function anotherOne() {
           { name: "View all employees", value: "VIEW EMPLOYEES" },
           { name: "Add a department", value: "ADD DEPARTMENT" },
           { name: "Add a role", value: "ADD ROLE" },
+          { name: "Add an employee", value: "ADD EMPLOYEE" },
+          { name: "Update an employee role", value: "UPDATE ROLE" },
           { name: "Exit?", value: "EXIT" },
         ],
       },
@@ -109,6 +155,12 @@ function anotherOne() {
       if (response.choice === "ADD ROLE") {
         addRole();
       }
+      if (response.choice === "ADD EMPLOYEE") {
+        addEmployee();
+      }
+       if (response.choice === "UPDATE ROLE") {
+         updateRole();
+       }
       if (response.choice === "EXIT") {
         process.exit();
       }
