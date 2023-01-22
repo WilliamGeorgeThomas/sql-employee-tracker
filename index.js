@@ -76,12 +76,21 @@ function addRole() {
   });
 }
 
-function employees() {
-  db.query("SELECT * FROM employee", function (err, results) {
-    const managers = results.map((manager) => ({ name: manager.first_name, value: manager.id }));
-    return managers;
+// function employees() {
+//   db.query("SELECT * FROM employee", function (err, results) {
+//     const managers = results.map((manager) => ({ name: manager.first_name, value: manager.id }));
+//     return managers;
+//   });
+// }
+
+async function employees() {
+  const results1 = await db.query("SELECT * FROM employee", function (err, results) {
+    console.log(results1)
+    const managers = results.map((manager) => ({ name: manager.first_name, value: manager.id }))
+    console.log(managers)
   });
-}
+} 
+
 
 function addEmployee() {
   db.query("SELECT * FROM role", function (err, results) {
@@ -106,19 +115,43 @@ function addEmployee() {
           type: "input",
           message: "Who is their manager?",
           name: "manager_id",
-          // choices: [],
+          // choices: [{None}, managers],
         },
       ])
       .then((answer) => {
         console.log(employees());
         db.query("INSERT INTO employee SET ?", answer, function (err, results) {
-          console.log("Role successfully added");
+          console.log("Employee successfully added");
         });
       });
   });
 }
 
-function updateRole()
+function updateRole() {
+ db.query("SELECT * FROM employee", function (err, results) {
+    const employees = results.map((employee) => ({ name: employee.last_name, value: employee.id }));
+    inquirer
+      .prompt([
+        {
+          type: "list",
+          message: "Which employee would you like to update?",
+          name: "id",
+          choices: employees,
+        },
+        {
+          type: "list",
+          message: "What is their new role?",
+          name: "role_id",
+          choices: [],
+        },
+      ])
+      .then((answer) => {
+        db.query("INSERT INTO employee SET answer.role_id WHERE id = answer.id", answer, function (err, results) {
+          console.log("Role successfully updated");
+        });
+      });
+  });
+}
 
 function anotherOne() {
   inquirer
