@@ -85,16 +85,16 @@ function addRole() {
 
 async function employees() {
   const results1 = await db.query("SELECT * FROM employee", function (err, results) {
-    console.log(results1)
-    const managers = results.map((manager) => ({ name: manager.first_name, value: manager.id }))
-    console.log(managers)
+    console.log(results1);
+    const managers = results.map((manager) => ({ name: manager.first_name + " " + manager.last_name, value: manager.id }));
+    console.log(managers);
   });
-} 
-
+}
 
 function addEmployee() {
-  db.query("SELECT * FROM role", function (err, results) {
+  db.query("SELECT role.id, role.title, employee.id, employee.first_name, employee.last_name FROM role INNER JOIN employee ON role.id = employee.role_id;", function (err, results) {
     const roles = results.map((role) => ({ name: role.title, value: role.id }));
+    const managers = results.map((manager) => ({ name: manager.first_name + " " + manager.last_name, value: manager.id }));
     inquirer
       .prompt([
         {
@@ -112,14 +112,18 @@ function addEmployee() {
           choices: roles,
         },
         {
-          type: "input",
+          type: "list",
           message: "Who is their manager?",
           name: "manager_id",
-          // choices: [{None}, managers],
+          choices: [{ name: "None", value: "NONE" }, managers],
+          // choices: managers
         },
       ])
       .then((answer) => {
-        console.log(employees());
+        // console.log(employees());
+        console.log(managers);
+        if (answer.choice === NONE) {
+        }
         db.query("INSERT INTO employee SET ?", answer, function (err, results) {
           console.log("Employee successfully added");
         });
@@ -128,8 +132,10 @@ function addEmployee() {
 }
 
 function updateRole() {
- db.query("SELECT * FROM employee", function (err, results) {
-    const employees = results.map((employee) => ({ name: employee.last_name, value: employee.id }));
+  //  db.query("SELECT * FROM employee", function (err, results) {
+  db.query("SELECT role.id, role.title, employee.id, employee.first_name, employee.last_name FROM role INNER JOIN employee ON role.id = employee.role_id;", function (err, results) {
+    const employees = results.map((employee) => ({ name: employee.first_name + " " + employee.last_name, value: employee.id }));
+    const roles = results.map((role) => ({ name: role.title, value: role.id }));
     inquirer
       .prompt([
         {
@@ -142,11 +148,11 @@ function updateRole() {
           type: "list",
           message: "What is their new role?",
           name: "role_id",
-          choices: [],
+          choices: roles,
         },
       ])
       .then((answer) => {
-        db.query("INSERT INTO employee SET answer.role_id WHERE id = answer.id", answer, function (err, results) {
+        db.query("UPDATE employee SET answer.role_id WHERE id = answer.id", answer, function (err, results) {
           console.log("Role successfully updated");
         });
       });
@@ -191,9 +197,9 @@ function anotherOne() {
       if (response.choice === "ADD EMPLOYEE") {
         addEmployee();
       }
-       if (response.choice === "UPDATE ROLE") {
-         updateRole();
-       }
+      if (response.choice === "UPDATE ROLE") {
+        updateRole();
+      }
       if (response.choice === "EXIT") {
         process.exit();
       }
