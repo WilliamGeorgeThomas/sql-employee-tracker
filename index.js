@@ -22,13 +22,13 @@ function viewDepartments() {
 }
 
 function viewRoles() {
-  db.query("SELECT * FROM role", function (err, results) {
+  db.query("SELECT role.id, role.title, role.salary, department.name FROM role JOIN department ON role.department_id = department.id", function (err, results) {
     console.table(results);
   });
 }
 
 function viewEmployees() {
-  db.query("SELECT * FROM employee", function (err, results) {
+  db.query("SELECT employee.id, employee.first_name, employee.last_name, role.title, department.name AS department, role.salary, CONCAT(manager.first_name, ' ', manager.last_name) AS manager FROM employee LEFT JOIN role on employee.role_id = role.id LEFT JOIN department on role.department_id = department.id LEFT JOIN employee manager on manager.id = employee.manager_id;", function (err, results) {
     console.table(results);
   });
 }
@@ -76,58 +76,41 @@ function addRole() {
   });
 }
 
-// function employees() {
-//   db.query("SELECT * FROM employee", function (err, results) {
-//     const managers = results.map((manager) => ({ name: manager.first_name, value: manager.id }));
-//     return managers;
-//   });
-// }
-
-async function employees() {
-  const results1 = await db.query("SELECT * FROM employee", function (err, results) {
-    console.log(results1);
-    const managers = results.map((manager) => ({ name: manager.first_name + " " + manager.last_name, value: manager.id }));
-    console.log(managers);
-  });
-}
-
 function addEmployee() {
-  db.query("SELECT role.id, role.title, employee.id, employee.first_name, employee.last_name FROM role INNER JOIN employee ON role.id = employee.role_id;", function (err, results) {
+  db.query("SELECT * from role", function (err, results) {
     const roles = results.map((role) => ({ name: role.title, value: role.id }));
-    const managers = results.map((manager) => ({ name: manager.first_name + " " + manager.last_name, value: manager.id }));
-    inquirer
-      .prompt([
-        {
-          message: "What is their first name?",
-          name: "first_name",
-        },
-        {
-          message: "What is their last name?",
-          name: "last_name",
-        },
-        {
-          type: "list",
-          message: "What is their role?",
-          name: "role_id",
-          choices: roles,
-        },
-        {
-          type: "list",
-          message: "Who is their manager?",
-          name: "manager_id",
-          choices: [{ name: "None", value: "NONE" }, managers],
-          // choices: managers
-        },
-      ])
-      .then((answer) => {
-        // console.log(employees());
-        console.log(managers);
-        if (answer.choice === NONE) {
-        }
-        db.query("INSERT INTO employee SET ?", answer, function (err, results) {
-          console.log("Employee successfully added");
+    db.query("SELECT * from employee", function (err, results) {
+      const managers = results.map((manager) => ({ name: manager.first_name + " " + manager.last_name, value: manager.id }));
+      managers.unshift({ name: "None", value: null });
+      inquirer
+        .prompt([
+          {
+            message: "What is their first name?",
+            name: "first_name",
+          },
+          {
+            message: "What is their last name?",
+            name: "last_name",
+          },
+          {
+            type: "list",
+            message: "What is their role?",
+            name: "role_id",
+            choices: roles,
+          },
+          {
+            type: "list",
+            message: "Who is their manager?",
+            name: "manager_id",
+            choices: managers,
+          },
+        ])
+        .then((answer) => {
+          db.query("INSERT INTO employee SET ?", answer, function (err, results) {
+            console.log("Employee successfully added");
+          });
         });
-      });
+    });
   });
 }
 
@@ -159,7 +142,7 @@ function updateRole() {
   });
 }
 
-function anotherOne() {
+function mainMenu() {
   inquirer
     .prompt([
       {
@@ -203,10 +186,7 @@ function anotherOne() {
       if (response.choice === "EXIT") {
         process.exit();
       }
-      // else {
-      //   anotherOne();
-      // }
     });
 }
 
-anotherOne();
+mainMenu();
