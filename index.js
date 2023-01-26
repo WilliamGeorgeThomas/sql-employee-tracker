@@ -1,14 +1,13 @@
 const inquirer = require("inquirer");
 const mysql = require("mysql2");
 const cTable = require("console.table");
+const figlet = require("figlet");
 require("dotenv").config();
 
 const db = mysql.createConnection(
   {
     host: "localhost",
-    // MySQL username,
     user: "root",
-    // MySQL password
     password: process.env.PW,
     database: "tracker",
   },
@@ -18,18 +17,21 @@ const db = mysql.createConnection(
 function viewDepartments() {
   db.query("SELECT * FROM department", function (err, results) {
     console.table(results);
+    anotherAction();
   });
 }
 
 function viewRoles() {
   db.query("SELECT role.id, role.title, department.name AS department, role.salary FROM role JOIN department ON role.department_id = department.id", function (err, results) {
     console.table(results);
+    anotherAction();
   });
 }
 
 function viewEmployees() {
   db.query("SELECT employee.id, employee.first_name, employee.last_name, role.title, department.name AS department, role.salary, CONCAT(manager.first_name, ' ', manager.last_name) AS manager FROM employee LEFT JOIN role on employee.role_id = role.id LEFT JOIN department on role.department_id = department.id LEFT JOIN employee manager on manager.id = employee.manager_id;", function (err, results) {
     console.table(results);
+    anotherAction();
   });
 }
 
@@ -44,6 +46,7 @@ function addDepartment() {
     .then((answer) => {
       db.query("INSERT INTO department SET ?", answer, function (err, results) {
         console.log("Department successfully added");
+        anotherAction();
       });
     });
 }
@@ -71,6 +74,7 @@ function addRole() {
       .then((answer) => {
         db.query("INSERT INTO role SET ?", answer, function (err, results) {
           console.log("Role successfully added");
+          anotherAction();
         });
       });
   });
@@ -108,6 +112,7 @@ function addEmployee() {
         .then((answer) => {
           db.query("INSERT INTO employee SET ?", answer, function (err, results) {
             console.log("Employee successfully added");
+            anotherAction();
           });
         });
     });
@@ -137,14 +142,38 @@ function updateRole() {
         .then((answer) => {
           db.query("UPDATE employee SET role_id = ? WHERE id = ?", [answer.role_id, answer.id], function (err, results) {
             console.log("Role successfully updated");
+            anotherAction();
           });
         });
     });
   });
 }
 
+function init() {
+  figlet.text(
+    "EMPLOYEE TRACKER",
+    {
+      font: "bulbhead",
+      horizontalLayout: "default",
+      verticalLayout: "default",
+      width: 80,
+      whitespaceBreak: true,
+    },
+    function (err, data) {
+      if (err) {
+        console.log("Something went wrong...");
+        console.dir(err);
+        return;
+      }
+      console.log(data);
+      mainMenu();
+    }
+  );
+}
+
 function mainMenu() {
   inquirer
+
     .prompt([
       {
         type: "list",
@@ -190,4 +219,27 @@ function mainMenu() {
     });
 }
 
-mainMenu();
+function anotherAction() {
+  inquirer
+    .prompt([
+      {
+        type: "list",
+        message: "Would you like to complete another action?",
+        name: "choice",
+        choices: [
+          { name: "Yes, continue", value: "YES" },
+          { name: "No, exit", value: "EXIT" },
+        ],
+      },
+    ])
+    .then((response) => {
+      if (response.choice === "YES") {
+        mainMenu();
+      }
+      if (response.choice === "EXIT") {
+        process.exit();
+      }
+    });
+}
+
+init();
